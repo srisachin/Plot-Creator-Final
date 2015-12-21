@@ -1,0 +1,5 @@
+xaxis,yaxis,plot
+cat,count,barcount
+cat,num,barmean
+num,prob,density
+num,num,scatter
