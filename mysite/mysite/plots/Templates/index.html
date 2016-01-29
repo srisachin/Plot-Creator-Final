@@ -9,6 +9,11 @@
 
 <!-- Latest compiled JavaScript -->
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/simple-sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/stylish-portfolio.css' %}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 <style type="text/css">
@@ -19,141 +24,119 @@
 	ul
     </style>
 <style> .myList{ list-style-type: none;} </style>
-<div class="col-md-4">
-<form type="get" action="." style="margin: 0">
-<div class="input-group add-on">
-    <input  id="search_box" type="text" name="search_box" class="form-control"  placeholder="Search..." >
-    <div class="input-group-btn">
-    <button id="search_submit" class="btn btn-primary" type="submit" ><i class="glyphicon glyphicon-search"></i></button>
+    <div id="wrapper">
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                        <font color="white">Select Dataset</font>
+                </li>
+                {% for pd in plotdata %}
+                <li>
+                    <a href="{% url 'plotdata' pd.id%}">{{pd.name}}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div id="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <a href="menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>
+                    </div>
+                </div>
+            </div>
+
+        <header id="top" class="header">
+            <div class="text-vertical-center">
+                <h1>Start Analysing</h1>
+                <h2>Create Graphs, Plots &amp; Templates</h3>
+                <h3>Upload csv file to analyse.</h3>
+                <br>
+                {%if not names%}
+                <form method="post" enctype="multipart/form-data">
+                    <label class="btn btn-dark btn-lg" for="fselector" >
+                    <input type="file" id="fselector" name="myfile" style="display:none;"/>
+                    Data
+                    </label>
+                    <input type="submit" name="submit" class="btn btn-dark btn-lg" value="upload" />
+                </form>
+                {%endif%}
+
+                {%if names%}
+                <button id="schema_submit" type="button" class="btn btn-lg btn-dark" data-toggle="modal" data-target="#myModal">Create Schema</button>
+                {%endif%}
+                <div class="text-center">
+                    <form type="get" action="analyse" >
+                      <button id="search_submit" style="display:none;" class="btn btn-dark btn-lg center-block" type="submit" >Analyse</butto
+                    </form>
+                </div>
+            </div>
+        </header>
+        <div class="col-md-4">
+            <div id="myModal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+        <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Schema</h4>
+                        </div>
+                        <div class="modal-body">
+                            <ul>
+                            <form id="myForm">
+                                {% for name in names%}
+                                <li>{{ name }}</li>
+	                            <div class="radio">
+		                            <label><input type="radio" id="numerical" name={{name}} value = "0">Numerical</label>
+		                            <label><input type="radio" id="categorical" name={{name}} value = "1">Categorical</label>
+	                            </div>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="myFormSubmit" class="btn btn-primary" data-dismiss="modal">Submit</button>
+                        </div>
+                            </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-</form>
-
-<form method="post" enctype="multipart/form-data">
-    <label class="btn btn-primary" for="fselector" >
-    <input type="file" id="fselector" name="myfile" style="display:none;"/>
-    Data
-    </label>
-<!--     <label class="btn btn-primary" for="sselector" >
-   <input type="file" id="sselector" name="myschema" style="display:none;"/>
-    Schema
-    </label> -->
-    <input type="submit" name="submit" class="btn btn-primary" value="upload" />
-</form>
-</div>
-
-
-
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Create Schema</button>
-{{names}}
-<form action="analyse" method="get">
-<!--<input id="analyse" type="button" class="btn btn-primary" value="Analyse" onclick="createCharts();" />-->
-<input type="submit" class="btn btn-primary" value="Analyse" name="mybtn">
-</form>
-
-<div id="myModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-
-    <!-- Modal content-->
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Schema</h4>
-      </div>
-      <div class="modal-body">
-<ul>
-<form id="myForm">
- {% for name in names%}
-        <li>{{ name }}</li>
-	<div class="radio">
-		<label><input type="radio" id="numerical" name={{name}} value = "0">Numerical</label>
-		<label><input type="radio" id="categorical" name={{name}} value = "1">Categorical</label>
-	</div>
- {% endfor %}
-</ul>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="myFormSubmit" class="btn btn-primary" data-dismiss="modal">Submit</button>
-      </div>
-</form>
-    </div>
-
-  </div>
-</div>
-
-{{filename}}
-
-{% load staticfiles %}
- {% for plot in plots%}
-	{% with plot|add:".png" as image_static %}
-        <ul class="myList"><li><img src="{% static image_static %}" alt="My image"/></li></ul>
-	{% endwith %}
-<br><br><br>
- {% endfor %}
-
 <script>
 $('#myFormSubmit').click(function(e){
 	e.preventDefault();
-//	alert($('.radio').text());
-	//var x = document.getElementsByClassName("radio");
 	schemaArr = {};
 	$('input[type="radio"]:checked').each(function() {
 		console.log(this.name);
     var item = $(this);
-    //n=this.name;
     if (this.value == 0) {
 		 console.log("num");
-		 //schemaArr.push({n:"num"});
      schemaArr[item.attr('name')] = "num";
       // do something if the value is less than zero and below or equal to two
     }else {
 		 console.log("cat");
-		 //schemaArr.push({n:"cat"});
      schemaArr[item.attr('name')] = "cat";
       // do something else if the value is greater than two
     }
   });
-  //var data_to_send = $.serialize(schemaArr);
+  document.getElementById('schema_submit').style.display = "none";
+  document.getElementById('search_submit').style.display = "block";
   console.log(schemaArr);
   $.ajax({
             url: "/",
             type: "post",
             data: {schema:JSON.stringify(schemaArr)},
             success: function(data,status) {
-//                alert(data);
             }
         })
-	//$.post("/plots/",
-    //    schemaArr,
-      //  function(data,status){
-        //    alert("Data: " + data + "\nStatus: " + status);
-        //});
-//	var i;
-//	for (i = 0; i < x.length; i++) {
-//		x[i].style.backgroundColor = "red";
-//	}
-      /*
-      $.post('http://path/to/post',
-         $('#myForm').serialize(),
-         function(data, status, xhr){
-           // do something here with response;
-         });
-      */
 });
-function createCharts(){
-    $.ajax({
-            url: "/plots/analyse",
-            type: "get",
-            data: "",
-            success: function(plots,status) {
-                alert(plots);
-                console.log(plots)
-            }
-        })
-
-}
 </script>
-
+    <script>
+    $("#menu-toggle").click(function(e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("toggled");
+    });
+    </script>
 </body>
 </html>

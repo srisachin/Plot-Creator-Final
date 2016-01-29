@@ -1,8 +1,7 @@
 name,type
-QUALITY,cat
-PH,num
-RATE,num
-YEAR,num
-COUNTRY,cat
-ALCOHOL,num
-PRICE,num
+SAT,num
+SALARY,num
+TUITION,num
+GPA,num
+COLLEGE,cat
+SID,cat

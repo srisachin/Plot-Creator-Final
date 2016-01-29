@@ -9,6 +9,7 @@
 
 <!-- Latest compiled JavaScript -->
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 <style type="text/css">
@@ -18,91 +19,54 @@
 	}
 	ul
     </style>
-<style> .myList{ list-style-type: none;} </style>
-<div class="col-md-4">
-<form type="get" action="." style="margin: 0">
+<style> .myList{ list-style-type: none;}
+form { display: inline; }</style>
+<div class="container">
+<div class = "row">
+<div class="col-sm-6">
+<form type="get" style="margin: 0">
 <div class="input-group add-on">
     <input  id="search_box" type="text" name="search_box" class="form-control"  placeholder="Search..." >
     <div class="input-group-btn">
-    <button id="search_submit" class="btn btn-primary" type="submit" ><i class="glyphicon glyphicon-search"></i></button>
+    <button id="search_submit" class="btn btn-dark" style="border-radius: 0" type="submit" ><i class="glyphicon glyphicon-search"></i></button>
     </div>
 </div>
 </form>
 <form action="/">
-    <input type="submit" class="btn btn-primary" value="Load Another Data">
+    <button type="submit" class="btn btn-dark" style="border-radius: 0">New Data</button>
 </form>
-{{filename}}
-
-{% load staticfiles %}
- {% for plot in plots%}
-	{% with plot|add:".png" as image_static %}
-        <ul class="myList"><li><img src="{% static image_static %}" alt="My image"/></li></ul>
-	{% endwith %}
-<br><br><br>
- {% endfor %}
+<form action="/analyse/">
+    <button type="submit" class="btn btn-dark" style="border-radius: 0">Refresh</button>
+</form>
+<button class="btn btn-dark" style="border-radius: 0" onclick="goBack()">Go Back</button>
 
 <script>
-$('#myFormSubmit').click(function(e){
-	e.preventDefault();
-//	alert($('.radio').text());
-	//var x = document.getElementsByClassName("radio");
-	schemaArr = {};
-	$('input[type="radio"]:checked').each(function() {
-		console.log(this.name);
-    var item = $(this);
-    //n=this.name;
-    if (this.value == 0) {
-		 console.log("num");
-		 //schemaArr.push({n:"num"});
-     schemaArr[item.attr('name')] = "num";
-      // do something if the value is less than zero and below or equal to two
-    }else {
-		 console.log("cat");
-		 //schemaArr.push({n:"cat"});
-     schemaArr[item.attr('name')] = "cat";
-      // do something else if the value is greater than two
-    }
-  });
-  //var data_to_send = $.serialize(schemaArr);
-  console.log(schemaArr);
-  $.ajax({
-            url: "/",
-            type: "post",
-            data: {schema:JSON.stringify(schemaArr)},
-            success: function(data,status) {
-//                alert(data);
-            }
-        })
-	//$.post("/plots/",
-    //    schemaArr,
-      //  function(data,status){
-        //    alert("Data: " + data + "\nStatus: " + status);
-        //});
-//	var i;
-//	for (i = 0; i < x.length; i++) {
-//		x[i].style.backgroundColor = "red";
-//	}
-      /*
-      $.post('http://path/to/post',
-         $('#myForm').serialize(),
-         function(data, status, xhr){
-           // do something here with response;
-         });
-      */
-});
-function createCharts(){
-    $.ajax({
-            url: "/plots/analyse",
-            type: "get",
-            data: "",
-            success: function(plots,status) {
-                alert(plots);
-                console.log(plots)
-            }
-        })
-
+function goBack() {
+    window.history.back();
 }
 </script>
+</div>
+</div>
 
+<br>
+<div class='row'>
+{% load staticfiles %}
+{% for plot in plots %}
+    {% with plot.id|stringformat:"i"|add:".png" as image_static %}
+    <div class = "col-md-6">
+      <div class = "thumbnail">
+        <a href = "{% url 'subplots' plot.id%}" class = "btn btn-dark" role = "button">
+        <img src="{% static image_static %}" alt="My image"/>
+        </a>
+        Tags:
+        {% for tags in plot.tagging_set.all %}
+        {{ tags.tag }}
+        {% endfor %}
+      </div>
+    </div>
+  {% endwith %}
+{% endfor %}
+</div>
+</div>
 </body>
 </html>

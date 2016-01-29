@@ -1,12 +1,6 @@
-#from django.shortcuts import render
+from django.shortcuts import render
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
-#import pickle
-#from django.http import HttpResponse
-#from django.template import RequestContext, loader
-#import pandas as pd;
-#from django.template.context_processors import csrf
-#import re;
 import Generate;
 import Groupby;
 import Genplots;
@@ -14,14 +8,12 @@ import settings;
 import csv;
 import codecs;
 import ast;
-
+from mysite.plots.models import Plotting;
+from mysite.plots.models import Tagging;
+#from mysite.plots.models import SubPlotting;
+from mysite.plots.models import PlotData;
 
 def index(request):
-#	plots = defaultdict(list);
-#	with open('/home/sachin/mysite/plots/static/plots/plots.pickle', 'rb') as handle:
-#		plots = pickle.load(handle)
-#	with open('/home/sachin/mysite/plots/static/plots/scores.pickle', 'rb') as handle:
-		#scores = pickle.load(handle)
 	if (request.is_ajax()):
 		print("reached here")
 		schema = request.POST.get('schema', '')
@@ -31,62 +23,72 @@ def index(request):
 		for key,value in sdict.items():
 			print(key)
 			print(value)
-		with open('schema.csv', 'w+') as destination:
+		with open('schema.csv', 'wt+') as destination:
 			csvwriter = csv.writer(destination)
 			csvwriter.writerow(["name", "type"])
 			for key,value in sdict.items():
 				csvwriter.writerow([key, value])
-		#return HttpResponse(json.dumps(schema), content_type="application/json")
-		return HttpResponse(schema)
+		with open('file.txt', 'r') as f:
+			filename = f.readlines()
+		Generate.main("schema.csv", "prototype.csv")
+		Groupby.main(filename[0], "schema.csv")
+		Genplots.main(filename[0], "experiment.csv", "groups.csv")
+		return HttpResponse([])
 	elif (request.method == 'POST'):
-#		X = plots['all'];
-#		T = [scores[i] for i in X];
-#		T = [0 if np.isnan(x) else x for x in T];
-#		Y= [x for (t,x) in sorted(zip(T,X),reverse=True)];
-#		Y = map(str, Y)
-#		T = sorted(T,reverse=True)
+		settings.count=0
 		if(not request.FILES):
-			f='wine.csv';
+		    plotdata=PlotData.objects.all()
+		    return render_to_response("index.html",{'plotdata':plotdata})
 		else:
 			f=request.FILES['myfile']
-		#fs=request.FILES['myschema']
-
-		with open('file.csv', 'wb+') as destination:
+		with open('file.txt', 'w') as dest:
+			dest.write(f.name)
+		with open(f.name, 'wb+') as destination:
 		        for chunk in f.chunks():
 		            destination.write(chunk)
-
-		#with open('schema.csv', 'wb+') as destination:
-		#        for chunk in fs.chunks():
-		#            destination.write(chunk)
-
-		#Generate.main("schema.csv", "prototype.csv")
-		#Groupby.main("file.csv", "schema.csv")
-		#Genplots.main("file.csv", "experiment.csv", "groups.csv")
-		#p=list(range(settings.count))
-		#p=map(str,p)
-#		return render_to_response("plots/index.html", {'plots_scores': zip(Y,T), 'filename' : f})
-		#return render_to_response("plots/index.html", { 'plots':p, 'filename' : f})
-		with codecs.open('file.csv', 'r', encoding="utf-8") as f:
+		with codecs.open(f.name, 'r', encoding="utf-8") as f:
 			d_reader = csv.DictReader(f)
 			headers = d_reader.fieldnames
-		return render_to_response("index.html", { 'names':headers})
-	return render_to_response("index.html")
+		plotdata=PlotData.objects.all()
+		return render_to_response("index.html", { 'names':headers, 'plotdata':plotdata})
+	plotdata=PlotData.objects.all()
+	return render_to_response("index.html",{'plotdata':plotdata})
 
 
 def analyse(request):
 	if (request.method == 'GET'): # If the form is submitted
 		print("reached here too")
-		Generate.main("schema.csv", "prototype.csv")
-		Groupby.main("file.csv", "schema.csv")
-		Genplots.main("file.csv", "experiment.csv", "groups.csv")
-#		f='';
-#		search_query = request.GET.get('search_box', None)
-#		X = plots[str(search_query).lower()];
-#		T = [scores[i] for i in X];
-#		T = [0 if np.isnan(x) else x for x in T];
-#		Y= [x for (t,x) in sorted(zip(T,X),reverse=True)];
-#		Y = map(str, Y)
-#		T = sorted(T,reverse=True)
-	return render_to_response("analyse.html", {'plots':map(str,list(range(settings.count)))})
-#                              {'plots': plots[search_query]})
-				#{'plots': '10'})
+		with open('file.txt', 'r') as f:
+			filename = f.readlines()
+		search_query = request.GET.get('search_box', None)
+		plotlist=Plotting.objects.filter(plotdata__name=filename[0])
+		if search_query:
+			words=search_query.split()
+			for i in range(0,len(words)):
+				plotlist=plotlist&Plotting.objects.filter(plotdata__name=filename[0]).filter(tagging__tag__icontains=words[i])
+		return render_to_response("analyse.html", {'plots':plotlist})
+
+def plotdata(request, plotdata_id=None):
+	print (plotdata_id)
+	dataname=PlotData.objects.filter(id=plotdata_id).values('name')
+	c=dataname[0]['name']
+	with open('file.txt', 'w') as dest:
+		dest.write(c)
+	plotlist=Plotting.objects.filter(plotdata__name=c)
+	search_query = request.GET.get('search_box', None)
+	if search_query:
+			words=search_query.split()
+			for i in range(0,len(words)):
+				plotlist=plotlist&Plotting.objects.filter(plotdata__name=c).filter(tagging__tag__icontains=words[i])
+	return render_to_response("analyse.html", {'plots':plotlist})
+
+def subplots(request, plot_id=None):
+	#subplotlist=SubPlotting.objects.filter(plot_id=plot_id)
+	#if (not subplotlist):
+	tags=Tagging.objects.filter(plot_id=plot_id).exclude(tag="Bar").exclude(tag="prob").exclude(tag="Scatter").exclude(tag="Density").exclude(tag="count").exclude(tag="mean").values('tag')
+	plotlist=Plotting.objects.none()
+	for t in tags:
+		plotlist=plotlist|Plotting.objects.filter(tagging__tag=t["tag"])
+	plotlist=plotlist.distinct()
+	return render_to_response("analyse.html", {'plots':plotlist})
+	#return render_to_response("analyse.html", {'plots':subplotlist})
