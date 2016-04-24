@@ -1,5 +1,3 @@
-# vim: set ft=rst:
-
-See https://www.pythonanywhere.com/help (or click the "Help" link at the top
-right) for help on how to use PythonAnywhere, including tips on copying and
-pasting from consoles, and writing your own web applications.
+forever-analytics - Copyright Sachin Srivastava. Please contact me sachinsri12345@gmail.com for using this code.
+This is the web interface for the forever-analytics project.
+Please visit srisachin@pythonanywhere.com to use the open source software
